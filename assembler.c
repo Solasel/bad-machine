@@ -35,18 +35,17 @@ const char *registers[] = {
 };
 
 /* Parses bal code in source into bml instructions in dest. */
-/* TODO */
 int assemble_and_write(const char *src, const char *dst);
 
 /* Gets a null-terminated list of the instructions
  * in src_text and writes it to inst_lst. */
-/* TODO */
 int get_inst_lst(char *src_text, char ***inst_lst);
 
 /* Converts line into a hex instruction
  * and stores that in dst. */
 /* TODO */
 int line_to_inst(int i, char **line, char **dst);
+
 /* Writes inst_lst to dst in a format that logisim gets. */
 /* TODO */
 int write_instuctions(**inst_lst, const char *dst);
@@ -60,10 +59,36 @@ int read_file(const char *src, char **buf);
 /* TODO */
 int free_str_lst(char **str_lst);
 
-/* Writes the low 5 bits of the given string
- * into the given I-type instruction. */
+/* Determines if arg is a valid register, and if so,
+ * writes it to the rsX field of instr. */
 /* TODO */
-int write_i_type_imm(char *imm, int *imm);
+int decode_rsX(char *arg, uint16_t *instr);
+
+/* Parses imm as a signed value, and writes
+ * it to I-type instr appropriately. */
+/* TODO */
+int decode_i_type_imm(char *imm, uint16_t *instr);
+
+/* Parses imm as a signed value, and writes
+ * it to S-Type instr appropriately. */
+/* TODO */
+int decode_s_type_imm(char *imm, uint16_t *instr);
+
+/* Parses imm as a signed value, and writes
+ * it to U-Type instr appropriately. */
+/* TODO */
+int decode_u_type_imm(char *imm, uint16_t *instr);
+
+/* Takes instr and converts it into a 4-digit
+ * hex representation for writing. */
+/* TODO */
+char *instr_to_hex(uint16_t instr);
+
+/* Gets the nth bit of x. */
+unsigned get_bit(unsigned x, unsigned n);
+
+/* Sets the nth bit of x to v. */
+void set_bit(unsigned * x, unsigned n, unsigned v);
 
 /* Main. */
 int main(int argc, char *argv[])
@@ -116,7 +141,7 @@ int assemble_and_write(const char *src, const char *dst)
 		return failure;
 	}
 
-	/* Loads the hex instructions into instructions. */
+	/* Loads the hex instructions into inst_lst. */
 	failure = get_inst_lst(src_buf, &inst_lst);
 	if (failure) {
 		printf("Failed to get a list of instructions at %d.\n",
@@ -193,6 +218,7 @@ free_inst_lst:
 
 /* Writes the bml equivalent of the bal in linep
  * into dst, in hex. */
+/* TODO */
 int line_to_inst(int i, char **linep, char **dst)
 {
 	uint16_t i;
@@ -222,5 +248,22 @@ int line_to_inst(int i, char **linep, char **dst)
 	}
 
 
+}
+
+// Return the nth bit of x.
+// Assume 0 <= n <= 31
+unsigned get_bit(unsigned x, unsigned n)
+{
+    // YOUR CODE HERE
+    // Returning -1 is a placeholder (it makes
+    // no sense, because get_bit only returns 
+    // 0 or 1)
+	return (x >> n) & 1;
+}
+// Set the nth bit of the value of x to v.
+// Assume 0 <= n <= 31, and v is 0 or 1
+void set_bit(unsigned * x, unsigned n, unsigned v)
+{
+	*x = (*x & ~(1 << n)) | (v << n);
 }
 

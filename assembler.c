@@ -59,6 +59,18 @@ int read_file(const char *src, char **buf);
 /* TODO */
 int free_str_lst(char **str_lst);
 
+/* Sets the OPC field of instr to the given value. */
+/* TODO */
+int set_opc(int opc, uint16_t *instr);
+
+/* Sets the S0 field of instr to the given value. */
+/* TODO */
+int set_s0(int s0, uint16_t *instr);
+
+/* Sets the S1 field of instr to the given value. */
+/* TODO */
+int set_s1(int s1, uint16_t *instr);
+
 /* Determines if arg is a valid register, and if so,
  * writes it to the rsX field of instr. */
 /* TODO */

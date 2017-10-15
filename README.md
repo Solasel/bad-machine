@@ -1,3 +1,27 @@
+First, thanks to [sultanxda](https://github.com/sultanxda) for his help on the assembler.
+
+```text
+This repo contains two main objects:
+
+A logisim circuit that implements a single-cycle processor for a machine language.
+
+An assembler that takes assembly code and disassembles it into machine language.
+
+To load the output of the assembler into logisim, poke the program memory on the left
+	side of the logisim circuit and select "edit contents" -> "Open...", then
+	navigate to the file you outputted your machine instructions into with the assembler.
+
+To run, simply enable ticks. I don't know the clock threshold for the cpu.
+
+```
+To check the output, right click on the 'regs' box in logisim and click "View Registers".
+	You can check the output against [venus](https://kvakil.github.io/venus/). Make
+	sure you only use x0 - x7, and only instructions supported by this arch.
+
+Currently very untested and probably very broken. Enjoy tearing your hair out!
+
+```text
+
 $$$$$$$$$$$$$$$$$$$$$$
 $$ bad-machine-code $$
 $$$$$$$$$$$$$$$$$$$$$$
@@ -65,6 +89,9 @@ FEDCBA98765|432|10
 = Instructions: =
 #################
 
+```
+```
+
 R : 00
 ======
 
@@ -113,6 +140,8 @@ S : 10
 U : 11
 ======
 lui		# rs0 = imm << 5
+
+```
 
 $$$$$$$$$$$$$$$$$$$$$$$$$$$
 $$ bad-assembly-language $$

@@ -51,7 +51,7 @@ static int get_inst_lst(char *src_text, char ***inst_lst);
 
 /* Writes the bml equivalent of the bal in linep
  * into dst, in hex. */
-static int line_to_inst(int i, char **linep, char **dst);
+static int line_to_inst(int line_num, char **linep, char **dst);
 
 /* Writes inst_lst to dst in a format that logisim gets. */
 static int write_instuctions(char **inst_lst, const char *dst);
@@ -214,8 +214,8 @@ static int get_inst_lst(char *src_text, char ***inst_lst)
 	char *temp_src = strdup(src_text);
 	if (!strtok(temp_src, "\r\n")) {
 		printf("Empty source file.\n");
-		failure = -1;
-		goto free_temp_src;
+		free(temp_src);
+		return -1;
 	}
 
 	while (strtok(NULL, "\r\n"))
@@ -225,65 +225,58 @@ static int get_inst_lst(char *src_text, char ***inst_lst)
 	if (inst_count > 256) {
 		printf("Too many instructions in source file.\n"
 				"You can put a max of 256 instructions.\n");
-		failure = -1;
-		goto free_temp_src;
+		return -1;
 	}
 
 	/* Initializes a null-terminated array
 	 * to write instructions to. */
 	*inst_lst = malloc((inst_count + 1) * sizeof(char *));
-	if (!inst_lst) {
+	if (!*inst_lst) {
 		printf("Failed to malloc a list of instructions at %d.\n",
 				__LINE__);
-		failure = 1;
-		goto free_temp_src;
+		return 1;
 	}
 
-	*inst_lst[inst_count] = NULL;
+	(*inst_lst)[inst_count] = NULL;
 
 	/* For each line in src_text, writes
 	 * its instruction to inst_lst. */
 	i = 0;
 	while ((line = strtok(src_text, "\r\n"))) {
-
 		failure = line_to_inst(i, &line, *inst_lst + i);
 		if (failure) {
 			printf("Failed to change a line to an instruction at "
 					"%d.\n", __LINE__);
 			free_str_lst(*inst_lst);
-			goto free_temp_src;
+			return failure;
 		}
 
 		src_text = strchr(line, '\0') + 1;
 		i++;
 	}
 
-free_temp_src:
-	free(temp_src);
 	return failure;
 }
 
 /* Writes the bml equivalent of the bal in linep
  * into dst, in hex. */
-static int line_to_inst(int i, char **linep, char **dst)
+static int line_to_inst(int line_num, char **linep, char **dst)
 {
 	char *delims = ", \t\v\f";
-	int failure;
+	int failure, i;
 	uint16_t instr;
 	char *arg1, *arg2, *arg3;
 	char *token;
-	char *line = *linep;
 
 	/* Figures out whether the command is valid. */
-	token = strtok(line, delims);
+	token = strtok(*linep, delims);
 	for (i = 0; i < NUM_INSTRUCTIONS; i++) {
-		if (!strcmp(token, instructions[i])) {
+		if (!strcmp(token, instructions[i]))
 			break;
-		}
 	}
 
 	if (i == NUM_INSTRUCTIONS) {
-		printf("invalid instruction: %s at line %d.\n", line, i);
+		printf("invalid instruction: %s at line %d.\n", *linep, line_num);
 		return -2;
 	}
 
@@ -293,9 +286,11 @@ static int line_to_inst(int i, char **linep, char **dst)
 	arg1 = strtok(NULL, delims);
 	arg2 = strtok(NULL, delims);
 	arg3 = strtok(NULL, delims);
+
+	*linep = arg3;
 	if (strtok(NULL, delims)) {
 		printf("Trailing characters on line %d.\n",
-				i);
+				line_num);
 		return -2;
 	}
 	
@@ -305,102 +300,102 @@ static int line_to_inst(int i, char **linep, char **dst)
 	switch (i) {
 	/* R-Types. */
 	case 0:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 0, 0);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 0, 0);
 		break;
 	case 1:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 0, 1);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 0, 1);
 		break;
 	case 2:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 1, 0);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 1, 0);
 		break;
 	case 3:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 1, 1);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 1, 1);
 		break;
 	case 4:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 2, 0);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 2, 0);
 		break;
 	case 5:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 3, 0);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 3, 0);
 		break;
 	case 6:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 3, 1);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 3, 1);
 		break;
 	case 7:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 4, 0);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 4, 0);
 		break;
 	case 8:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 4, 1);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 4, 1);
 		break;
 	case 9:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 5, 0);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 5, 0);
 		break;
 	case 10:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 5, 1);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 5, 1);
 		break;
 	case 11:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 6, 0);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 6, 0);
 		break;
 	case 12:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 6, 1);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 6, 1);
 		break;
 	case 13:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 7, 0);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 7, 0);
 		break;
 	case 14:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 7, 1);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 7, 1);
 		break;
 	case 15:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 7, 2);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 7, 2);
 		break;
 	case 16:
-		failure = write_r_type(i, &instr, arg1, arg2, arg3, 7, 3);
+		failure = write_r_type(line_num, &instr, arg1, arg2, arg3, 7, 3);
 		break;
 	/* I-Types. */
 	case 17:
-		failure = write_i_type(i, &instr, arg1, arg2, arg3, 0);
+		failure = write_i_type(line_num, &instr, arg1, arg2, arg3, 0);
 		break;
 	case 18:
-		failure = write_i_type(i, &instr, arg1, arg2, arg3, 1);
+		failure = write_i_type(line_num, &instr, arg1, arg2, arg3, 1);
 		break;
 	case 19:
-		failure = write_i_type(i, &instr, arg1, arg2, arg3, 2);
+		failure = write_i_type(line_num, &instr, arg1, arg2, arg3, 2);
 		break;
 	case 20:
-		failure = write_i_type(i, &instr, arg1, arg2, arg3, 3);
+		failure = write_i_type(line_num, &instr, arg1, arg2, arg3, 3);
 		break;
 	case 21:
-		failure = write_i_type(i, &instr, arg1, arg2, arg3, 4);
+		failure = write_i_type(line_num, &instr, arg1, arg2, arg3, 4);
 		break;
 	case 22:
-		failure = write_i_type(i, &instr, arg1, arg2, arg3, 5);
+		failure = write_i_type(line_num, &instr, arg1, arg2, arg3, 5);
 		break;
 	case 23:
-		failure = write_i_type(i, &instr, arg1, arg2, arg3, 6);
+		failure = write_i_type(line_num, &instr, arg1, arg2, arg3, 6);
 		break;
 	case 24:
-		failure = write_i_type(i, &instr, arg1, arg2, arg3, 7);
+		failure = write_i_type(line_num, &instr, arg1, arg2, arg3, 7);
 		break;
 	/* S-Types. */
-	case 25: failure = write_s_type(i, &instr, arg1, arg2, arg3);
+	case 25:
+		failure = write_s_type(line_num, &instr, arg1, arg2, arg3);
 		break;
 	/* U-Types. */
 	case 26:
-		failure = write_u_type(i, &instr, arg1, arg2);
+		failure = write_u_type(line_num, &instr, arg1, arg2);
 		break;
 	}
 
 	if (failure) {
-		printf("Invalid instruction: %s at line %d.\n", line, i);
+		printf("Invalid instruction: %s at line %d.\n", *linep, line_num);
 		return -2;
 	}
 
 	/* Finally, interprets instr and puts its
 	 * hex representation into dst. */
 	failure = instr_to_hex(instr, dst);
-	if (failure) {
+	if (failure)
 		printf("Failed to turn an instruction into hex at line %d.\n",
 				__LINE__);
-	}
 
 	return failure;
 }
@@ -408,7 +403,7 @@ static int line_to_inst(int i, char **linep, char **dst)
 /* Writes inst_lst to dst in a format that logisim gets. */
 static int write_instuctions(char **inst_lst, const char *dst)
 {
-	int i = 1;
+	int i;
 
 	FILE *target;
 	target = fopen(dst, "w");
@@ -419,11 +414,9 @@ static int write_instuctions(char **inst_lst, const char *dst)
 	}
 
 	fputs("v2.0 raw\n", target);
-	while (*inst_lst) {
+	for (i = 1; *inst_lst; i++, inst_lst++) {
 		fputs(*inst_lst, target);
 		fputc(i % 8 ? ' ': '\n', target);
-		inst_lst++;
-		i++;
 	}
 
 	fclose(target);

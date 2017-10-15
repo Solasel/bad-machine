@@ -87,13 +87,13 @@ static int write_u_type(int line, uint16_t *instr,
 		char *arg1, char *arg2);
 
 /* Sets the OPC field of instr to the given value. */
-static int set_opc(int opc, uint16_t *instr);
+static void set_opc(int opc, uint16_t *instr);
 
 /* Sets the S1 field of instr to the given value. */
-static int set_s1(int s1, uint16_t *instr);
+static void set_s1(int s1, uint16_t *instr);
 
 /* Sets the S2 field of instr to the given value. */
-static int set_s2(int s2, uint16_t *instr);
+static void set_s2(int s2, uint16_t *instr);
 
 /* Makes sure that reg is a valid register. */
 static int is_invalid_reg(char *reg);
@@ -103,22 +103,22 @@ static int is_invalid_reg(char *reg);
  * x < 0 ==> rs2
  * x = 0 ==> rs0
  * x > 0 ==> rs1	*/
-static int decode_rsx(int x, char *arg, uint16_t *instr);
+static void decode_rsx(int x, char *arg, uint16_t *instr);
 
 /* Makes sure that imm is a valid decimal number. */
 static int is_invalid_imm(char *imm);
 
 /* Parses imm as a signed value, and writes
  * it to I-type instr appropriately. */
-static int decode_i_type_imm(char *imm, uint16_t *instr);
+static void decode_i_type_imm(char *imm, uint16_t *instr);
 
 /* Parses imm as a signed value, and writes
  * it to S-Type instr appropriately. */
-static int decode_s_type_imm(char *imm, uint16_t *instr);
+static void decode_s_type_imm(char *imm, uint16_t *instr);
 
 /* Parses imm as a signed value, and writes
  * it to U-Type instr appropriately. */
-static int decode_u_type_imm(char *imm, uint16_t *instr);
+static void decode_u_type_imm(char *imm, uint16_t *instr);
 
 /* Takes instr and converts it into a 4-digit
  * hex representation, stored in buf. */
@@ -212,6 +212,12 @@ static int get_inst_lst(char *src_text, char ***inst_lst)
 	/* Gets the number of instructions. */
 	int inst_count = 1;
 	char *temp_src = strdup(src_text);
+	if (!temp_src) {
+		printf("Failed to malloc a copy of source file at line %d.\n",
+				__LINE__);
+		return 1;
+	}
+
 	if (!strtok(temp_src, "\r\n")) {
 		printf("Empty source file.\n");
 		free(temp_src);
@@ -220,6 +226,7 @@ static int get_inst_lst(char *src_text, char ***inst_lst)
 
 	while (strtok(NULL, "\r\n"))
 		inst_count++;
+	free(temp_src);
 	printf("%d instructions in source file.\n", inst_count);
 
 	if (inst_count > 256) {
@@ -592,28 +599,25 @@ static int write_u_type(int line, uint16_t *instr,
 }
 
 /* Sets the OPC field of instr to the given value. */
-static int set_opc(int opc, uint16_t *instr)
+static void set_opc(int opc, uint16_t *instr)
 {
 	set_bit(instr, 0, get_bit(opc, 0));
 	set_bit(instr, 1, get_bit(opc, 1));
-	return 0;
 }
 
 /* Sets the S1 field of instr to the given value. */
-static int set_s1(int s1, uint16_t *instr)
+static void set_s1(int s1, uint16_t *instr)
 {
 	set_bit(instr, 5, get_bit(s1, 0));
 	set_bit(instr, 6, get_bit(s1, 1));
 	set_bit(instr, 7, get_bit(s1, 2));
-	return 0;
 }
 
 /* Sets the S2 field of instr to the given value. */
-static int set_s2(int s2, uint16_t *instr)
+static void set_s2(int s2, uint16_t *instr)
 {
 	set_bit(instr, 14, get_bit(s2, 0));
 	set_bit(instr, 15, get_bit(s2, 1));
-	return 0;
 }
 
 /* Makes sure that reg is a valid register. */
@@ -632,7 +636,7 @@ static int is_invalid_reg(char *reg)
  * x < 0 ==> rs2
  * x = 0 ==> rs0
  * x > 0 ==> rs1	*/
-static int decode_rsx(int x, char *arg, uint16_t *instr)
+static void decode_rsx(int x, char *arg, uint16_t *instr)
 {
 	int i;
 	for (i = 0; i < NUM_REGISTERS; i++) {
@@ -653,8 +657,6 @@ static int decode_rsx(int x, char *arg, uint16_t *instr)
 		set_bit(instr, 12, get_bit(i, 1));
 		set_bit(instr, 13, get_bit(i, 2));
 	}
-
-	return 0;
 }
 
 /* Makes sure that imm is a valid decimal number. */
@@ -674,7 +676,7 @@ static int is_invalid_imm(char *imm)
 
 /* Parses imm as a signed value, and writes
  * it to I-type instr appropriately. */
-static int decode_i_type_imm(char *imm, uint16_t *instr)
+static void decode_i_type_imm(char *imm, uint16_t *instr)
 {
 	long imm_l = strtol(imm, NULL, 10);
 	set_bit(instr, 11, get_bit(imm_l, 0));
@@ -682,12 +684,11 @@ static int decode_i_type_imm(char *imm, uint16_t *instr)
 	set_bit(instr, 13, get_bit(imm_l, 2));
 	set_bit(instr, 14, get_bit(imm_l, 3));
 	set_bit(instr, 15, get_bit(imm_l, 4));
-	return 0;
 }
 
 /* Parses imm as a signed value, and writes
  * it to S-Type instr appropriately. */
-static int decode_s_type_imm(char *imm, uint16_t *instr)
+static void decode_s_type_imm(char *imm, uint16_t *instr)
 {
 	long imm_l = strtol(imm, NULL, 10);
 	set_bit(instr, 5, get_bit(imm_l, 0));
@@ -695,12 +696,11 @@ static int decode_s_type_imm(char *imm, uint16_t *instr)
 	set_bit(instr, 7, get_bit(imm_l, 2));
 	set_bit(instr, 14, get_bit(imm_l, 3));
 	set_bit(instr, 15, get_bit(imm_l, 4));
-	return 0;
 }
 
 /* Parses imm as a signed value, and writes
  * it to U-Type instr appropriately. */
-static int decode_u_type_imm(char *imm, uint16_t *instr)
+static void decode_u_type_imm(char *imm, uint16_t *instr)
 {
 	long imm_l = strtol(imm, NULL, 10);
 	set_bit(instr, 5, get_bit(imm_l, 0));
@@ -714,7 +714,6 @@ static int decode_u_type_imm(char *imm, uint16_t *instr)
 	set_bit(instr, 13, get_bit(imm_l, 8));
 	set_bit(instr, 14, get_bit(imm_l, 9));
 	set_bit(instr, 15, get_bit(imm_l, 10));
-	return 0;
 }
 
 /* Takes instr and converts it into a 4-digit

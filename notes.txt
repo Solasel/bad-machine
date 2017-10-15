@@ -1,4 +1,6 @@
-bad-machine-code
+$$$$$$$$$$$$$$$$$$$$$$
+$$ bad-machine-code $$
+$$$$$$$$$$$$$$$$$$$$$$
 
 #########
 = SPEC: =
@@ -6,6 +8,7 @@ bad-machine-code
 
 16 bit regs/instructions
 8 regs (3 bit specifications)
+word-aligned addressing
 
 Instruction Format:
 
@@ -17,6 +20,8 @@ S1  - Primary Function Selector
 S2  - Secondary Function Selector
 Imm - Immediate, scrambled around
 	as necessary
+
+	- abbreviated as "i" below
 
 ########################
 ======= Formats: =======
@@ -63,41 +68,41 @@ FEDCBA98765|432|10
 R : 00
 ======
 
-000 | 00 : add	# rd = rs1 + rs2
-000 | 01 : sub	# rd = rs1 - rs2
+000 | 00 : add	# rs0 = rs1 + rs2
+000 | 01 : sub	# rs0 = rs1 - rs2
 
-001 | 00 : slt	# rd = rs1 < rs2
-001 | 01 : sltu # rd = rs1 < rs2 (rs2 unsigned)
+001 | 00 : slt	# rs0 = rs1 < rs2
+001 | 01 : sltu # rs0 = rs1 < rs2 (rs2 unsigned)
 
-010 | 00 : sll	# rd = rs1 << rs2
+010 | 00 : sll	# rs0 = rs1 << rs2
 
-011 | 00 : sra	# rd = rs1 >> rs2 "sign bit in leftmost
-011 | 01 : srl	# rd = rs1 >> rs2 "0's in leftmost
+011 | 00 : sra	# rs0 = rs1 >> rs2 "sign bit in leftmost
+011 | 01 : srl	# rs0 = rs1 >> rs2 "0's in leftmost
 
-100 | 00 : or	# rd = rs1 OR rs2
-100 | 01 : nor	# rd = ~(rs1 OR rs2)
+100 | 00 : or	# rs0 = rs1 OR rs2
+100 | 01 : nor	# rs0 = ~(rs1 OR rs2)
 
-101 | 00 : and	# rd = rs1 AND rs2
-101 | 01 : nand	# rd = ~(rs1 AND rs2)
+101 | 00 : and	# rs0 = rs1 AND rs2
+101 | 01 : nand	# rs0 = ~(rs1 AND rs2)
 
-110 | 00 : xor	# rd = rs1 XOR rs2
-110 | 01 : xnor	# rd = ~(rs1 XOR rs2)
+110 | 00 : xor	# rs0 = rs1 XOR rs2
+110 | 01 : xnor	# rs0 = ~(rs1 XOR rs2)
 
-111 | 00 : mul  # rd = [rs1 * rs2](31-0) 
-111 | 01 : mulh # rd = [rs1 * rs2](63-32)
-111 | 10 : div	# rd = rs1 / rs2
-111 | 11 : rem	# rd = rem(rs1 / rs2)
+111 | 00 : mul  # rs0 = [rs1 * rs2](31-0) 
+111 | 01 : mulh # rs0 = [rs1 * rs2](63-32)
+111 | 10 : div	# rs0 = rs1 / rs2
+111 | 11 : rem	# rs0 = rem(rs1 / rs2)
 
 I : 01
 ======
-000 : addi	# rd = rs1 + imm
-001 : slti	# rd = rs1 < imm
-010 : slli	# rd = rsi << imm
-011 : srai	# rd = rsi >> imm "sign bit in leftmost
-100 : ori 	# rd = rsi OR imm
-101 : andi	# rd = rsi AND imm
-110 : xori	# rd = rsi XOR imm
-111 : lw	# rd = RAM(rs1 + imm);
+000 : addi	# rs0 = rs1 + imm
+001 : slti	# rs0 = rs1 < imm
+010 : slli	# rs0 = rsi << imm
+011 : srai	# rs0 = rsi >> imm "sign bit in leftmost
+100 : ori 	# rs0 = rsi OR imm
+101 : andi	# rs0 = rsi AND imm
+110 : xori	# rs0 = rsi XOR imm
+111 : lw	# rs0 = RAM(rs1 + imm);
 
 
 S : 10
@@ -107,5 +112,28 @@ S : 10
 
 U : 11
 ======
-lui			# rd = imm << 5
+lui		# rs0 = imm << 5
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$ bad-assembly-language $$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+#########
+= USAGE =
+#########
+
+The commands are exactly those above, there is no shorthand.
+
+R-type:		cmd rs0, rs1, rs2
+I-type:		cmd rs0, rs1, imm
+S-type: 	cmd rs2, rs1, imm
+U-type:		lui rs0, imm
+
+where rs0, rs1, and rs2 are x0-x7, and imm is a decimal number.
+
+Commands are separated by newlines, and parts of commands
+	are separated by commas and whiespace (including tabs).
+
+Note that if the imm field is larger than can be fit in the given instruction,
+	its upper bits are truncated.
 

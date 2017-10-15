@@ -1,4 +1,4 @@
-First, thanks to [sultanxda](https://github.com/sultanxda) for his help on the assembler.
+First, thanks to my pal [sultanxda](https://github.com/sultanxda) for his help on the assembler.
 
 This repo contains two main objects:
 

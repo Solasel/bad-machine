@@ -143,17 +143,16 @@ Assembly Language:
 
 The commands are exactly those above, there is no shorthand.
 
+```
 R-type:		cmd rs0, rs1, rs2
-
 I-type:		cmd rs0, rs1, imm
-
 S-type: 	cmd rs2, rs1, imm
-
 U-type:		lui rs0, imm
+```
 
 where rs0, rs1, and rs2 are x0-x7, and imm is a decimal number.
 
-	-Note that this doesn't support the sw/lw format of immediates.
+	-Note that this doesn't support the sw/lw format of immediates used in RISC-V.
 
 Commands are separated by newlines, and parts of commands
 	are separated by commas and whiespace (including tabs).

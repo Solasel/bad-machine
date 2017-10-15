@@ -1,22 +1,21 @@
-/*
-   Takes a file with bal commdands and turns it into
+/* Takes a file with bal commdands and turns it into
    a file with equivalent bml instructions to be
    passed into logisim and be run.
 
    For all of you vim users, this file has a view file
-   called assembler.c.v
+   called .assembler.c.v
 
-   USE IT!
-*/
+   USE IT!						*/
 
 /* Constants. */
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 
 #define NUM_INSTRUCTIONS (27)
-#define NUM_REGISTER (8)
+#define NUM_REGISTERS (8)
 
 static const char *instructions[] = {
 	"add", "sub",
@@ -55,14 +54,14 @@ static int get_inst_lst(char *src_text, char ***inst_lst);
 static int line_to_inst(int i, char **linep, char **dst);
 
 /* Writes inst_lst to dst in a format that logisim gets. */
-static int write_instuctions(**inst_lst, const char *dst);
+static int write_instuctions(char **inst_lst, const char *dst);
 
 /* Reads the contents of src and puts it into buf.
  * buf is double-null terminated. */
 static int read_file(const char *src, char **buf);
 
 /* Frees a null-terminated list of strings. */
-static int free_str_lst(char **str_lst);
+static void free_str_lst(char **str_lst);
 
 /* Formats instr as an R-style instruction
  * with given arg1, arg2, and arg3, and
@@ -97,7 +96,7 @@ static int set_s1(int s1, uint16_t *instr);
 static int set_s2(int s2, uint16_t *instr);
 
 /* Makes sure that reg is a valid register. */
-static int is_invalid_reg(char *reg)
+static int is_invalid_reg(char *reg);
 
 /* Given a valid register arg,
  * writes it to the rsX field of instr.
@@ -126,10 +125,10 @@ static int decode_u_type_imm(char *imm, uint16_t *instr);
 static int instr_to_hex(uint16_t instr, char **buf);
 
 /* Gets the nth bit of x. */
-static unsigned get_bit(unsigned x, unsigned n);
+static unsigned get_bit(uint16_t x, unsigned n);
 
 /* Sets the nth bit of x to v. */
-static void set_bit(unsigned * x, unsigned n, unsigned v);
+static void set_bit(uint16_t * x, unsigned n, unsigned v);
 
 /* Main. */
 int main(int argc, char *argv[])
@@ -144,7 +143,7 @@ int main(int argc, char *argv[])
 		goto end;
 	}
 	/* Attempts to parse argv[1] -> argv[2]. */
-	printf("Attempting to parse %s into machine language -> %s...",
+	printf("Attempting to parse %s into machine language -> %s...\n",
 			argv[1], argv[2]); 
 
 	failure = assemble_and_write(argv[1], argv[2]);
@@ -207,15 +206,14 @@ free_src_buf:
  * in src_text and writes it to buf. */
 static int get_inst_lst(char *src_text, char ***inst_lst)
 {
-	int failure;
-	int i;
+	int failure, i;
 	char *line;
 
 	/* Gets the number of instructions. */
 	int inst_count = 1;
 	char *temp_src = strdup(src_text);
 	if (!strtok(temp_src, "\r\n")) {
-		printf("Empty source file.\n")
+		printf("Empty source file.\n");
 		failure = -1;
 		goto free_temp_src;
 	}
@@ -252,34 +250,32 @@ static int get_inst_lst(char *src_text, char ***inst_lst)
 		if (failure) {
 			printf("Failed to change a line to an instruction at "
 					"%d.\n", __LINE__);
-			goto free_inst_lst;
+			free_str_lst(*inst_lst);
+			goto free_temp_src;
 		}
 
 		src_text = strchr(line, '\0') + 1;
 		i++;
 	}
 
-free_inst_lst:
-	free_str_lst(inst_lst);
 free_temp_src:
 	free(temp_src);
-	return failure
+	return failure;
 }
 
 /* Writes the bml equivalent of the bal in linep
  * into dst, in hex. */
 static int line_to_inst(int i, char **linep, char **dst)
 {
+	char *delims = ", \t\v\f";
 	int failure;
 	uint16_t instr;
-
 	char *arg1, *arg2, *arg3;
-
-	char *line = *linep;
 	char *token;
+	char *line = *linep;
 
 	/* Figures out whether the command is valid. */
-	token = strtok(line, ", \t\v\f");
+	token = strtok(line, delims);
 	for (i = 0; i < NUM_INSTRUCTIONS; i++) {
 		if (!strcmp(token, instructions[i])) {
 			break;
@@ -294,10 +290,10 @@ static int line_to_inst(int i, char **linep, char **dst)
 	/* Once we are sure we have an instruction,
 	 * rip the arguments from it and check
 	 * for trailing characters. */
-	arg1 = strtok(NULL, ", \t\v\f");
-	arg2 = strtok(NULL, ", \t\v\f");
-	arg3 = strtok(NULL, ", \t\v\f");
-	if (strtok(NULL, ", \t\v\f")) {
+	arg1 = strtok(NULL, delims);
+	arg2 = strtok(NULL, delims);
+	arg3 = strtok(NULL, delims);
+	if (strtok(NULL, delims)) {
 		printf("Trailing characters on line %d.\n",
 				i);
 		return -2;
@@ -309,140 +305,87 @@ static int line_to_inst(int i, char **linep, char **dst)
 	switch (i) {
 	/* R-Types. */
 	case 0:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				0, 0);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 0, 0);
 		break;
 	case 1:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				0, 1);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 0, 1);
 		break;
 	case 2:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				1, 0);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 1, 0);
 		break;
 	case 3:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				1, 1);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 1, 1);
 		break;
 	case 4:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				2, 0);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 2, 0);
 		break;
 	case 5:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				3, 0);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 3, 0);
 		break;
 	case 6:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				3, 1);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 3, 1);
 		break;
 	case 7:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				4, 0);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 4, 0);
 		break;
 	case 8:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				4, 1);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 4, 1);
 		break;
 	case 9:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				5, 0);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 5, 0);
 		break;
 	case 10:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				5, 1);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 5, 1);
 		break;
 	case 11:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				6, 0);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 6, 0);
 		break;
 	case 12:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				6, 1);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 6, 1);
 		break;
 	case 13:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				7, 0);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 7, 0);
 		break;
 	case 14:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				7, 1);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 7, 1);
 		break;
 	case 15:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				7, 2);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 7, 2);
 		break;
 	case 16:
-		failure = write_r_type(i, &instr,
-				arg1, arg2, arg3,
-				7, 3);
+		failure = write_r_type(i, &instr, arg1, arg2, arg3, 7, 3);
 		break;
 	/* I-Types. */
 	case 17:
-		failure = write_i_type(i, &instr,
-				arg1, arg2, arg3,
-				0);
+		failure = write_i_type(i, &instr, arg1, arg2, arg3, 0);
 		break;
 	case 18:
-		failure = write_i_type(i, &instr,
-				arg1, arg2, arg3,
-				1);
+		failure = write_i_type(i, &instr, arg1, arg2, arg3, 1);
 		break;
 	case 19:
-		failure = write_i_type(i, &instr,
-				arg1, arg2, arg3,
-				2);
+		failure = write_i_type(i, &instr, arg1, arg2, arg3, 2);
 		break;
 	case 20:
-		failure = write_i_type(i, &instr,
-				arg1, arg2, arg3,
-				3);
+		failure = write_i_type(i, &instr, arg1, arg2, arg3, 3);
 		break;
 	case 21:
-		failure = write_i_type(i, &instr,
-				arg1, arg2, arg3,
-				4);
+		failure = write_i_type(i, &instr, arg1, arg2, arg3, 4);
 		break;
 	case 22:
-		failure = write_i_type(i, &instr,
-				arg1, arg2, arg3,
-				5);
+		failure = write_i_type(i, &instr, arg1, arg2, arg3, 5);
 		break;
 	case 23:
-		failure = write_i_type(i, &instr,
-				arg1, arg2, arg3,
-				6);
+		failure = write_i_type(i, &instr, arg1, arg2, arg3, 6);
 		break;
 	case 24:
-		failure = write_i_type(i, &instr,
-				arg1, arg2, arg3,
-				7);
+		failure = write_i_type(i, &instr, arg1, arg2, arg3, 7);
 		break;
 	/* S-Types. */
-	case 25:
-		failure = write_s_type(i, &instr,
-				arg1, arg2, arg3);
+	case 25: failure = write_s_type(i, &instr, arg1, arg2, arg3);
 		break;
 	/* U-Types. */
 	case 26:
-		failure = write_u_type(i, &instr,
-				arg1, arg2);
+		failure = write_u_type(i, &instr, arg1, arg2);
 		break;
 	}
 
@@ -453,7 +396,7 @@ static int line_to_inst(int i, char **linep, char **dst)
 
 	/* Finally, interprets instr and puts its
 	 * hex representation into dst. */
-	failure = inst_to_hex(instr, dst);
+	failure = instr_to_hex(instr, dst);
 	if (failure) {
 		printf("Failed to turn an instruction into hex at line %d.\n",
 				__LINE__);
@@ -463,9 +406,8 @@ static int line_to_inst(int i, char **linep, char **dst)
 }
 
 /* Writes inst_lst to dst in a format that logisim gets. */
-static int write_instuctions(**inst_lst, const char *dst)
+static int write_instuctions(char **inst_lst, const char *dst)
 {
-	int failure = 0;
 	int i = 1;
 
 	FILE *target;
@@ -476,16 +418,16 @@ static int write_instuctions(**inst_lst, const char *dst)
 		return 1;
 	}
 
-	fputs("v2.0 raw\n" target);
+	fputs("v2.0 raw\n", target);
 	while (*inst_lst) {
-		fputs(*inst_lst, dst);
-		fputc(i % 8 ? ' ': '\n', dst);
+		fputs(*inst_lst, target);
+		fputc(i % 8 ? ' ': '\n', target);
 		inst_lst++;
 		i++;
 	}
 
 	fclose(target);
-	return failure;
+	return 0;
 }
 
 /* ###############
@@ -497,11 +439,10 @@ static int write_instuctions(**inst_lst, const char *dst)
 static int read_file(const char *src, char **buf)
 {
 	int failure = 0;
-
 	FILE *source;
 	long len;
 
-	source = fopen(dst, "rb");
+	source = fopen(src, "rb");
 	if (!source) {
 		printf("Failed to read from file %s at %d.\n",
 				src, __LINE__);
@@ -520,7 +461,7 @@ static int read_file(const char *src, char **buf)
 		goto close_file;
 	}
 
-	fread(*buf, 1, len, fp);
+	fread(*buf, 1, len, source);
 	(*buf)[len] = '\0';
 	(*buf)[len + 1] = '\0';
 
@@ -530,13 +471,12 @@ close_file:
 }
 
 /* Frees a null-terminated list of strings. */
-static int free_str_lst(char **str_lst)
+static void free_str_lst(char **str_lst)
 {
 	char **temp = str_lst;
 	while (*temp)
 		free(*(temp++));
 	free(str_lst);
-	return 0;
 }
 
 /* Formats instr as an R-style instruction
@@ -688,7 +628,7 @@ static int is_invalid_reg(char *reg)
 {
 	int i;
 	for (i = 0; i < NUM_REGISTERS; i++) {
-		if (!strcmp(line, registers[i]))
+		if (!strcmp(reg, registers[i]))
 			return 0;
 	}
 	return -2;
@@ -703,7 +643,7 @@ static int decode_rsx(int x, char *arg, uint16_t *instr)
 {
 	int i;
 	for (i = 0; i < NUM_REGISTERS; i++) {
-		if (!strcmp(line, registers[i]))
+		if (!strcmp(arg, registers[i]))
 			break;
 	}
 
@@ -728,7 +668,11 @@ static int decode_rsx(int x, char *arg, uint16_t *instr)
 static int is_invalid_imm(char *imm)
 {
 	int i;
-	for (i = 0; i < strlen(imm); i++) {
+
+	if (imm[0] != '-' && (imm[0] < '0' || imm[0] > '9'))
+		return 1;
+
+	for (i = 1; imm[i]; i++) {
 		if (imm[i] < '0' || imm[i] > '9')
 			return 1;
 	}
@@ -782,7 +726,7 @@ static int decode_u_type_imm(char *imm, uint16_t *instr)
 
 /* Takes instr and converts it into a 4-digit
  * hex representation, stored in buf. */
-static int instr_to_hex(uint16_t instr, char **buf);
+static int instr_to_hex(uint16_t instr, char **buf)
 {
 	*buf = malloc(5 * sizeof(char));
 	if (!*buf) {
@@ -796,14 +740,14 @@ static int instr_to_hex(uint16_t instr, char **buf);
 }
 
 /* returns the nth bit of x. */
-static unsigned get_bit(unsigned x, unsigned n)
+static unsigned get_bit(uint16_t x, unsigned n)
 {
 	return x & (1U << n);
 }
 
 /* Sets the nth bit of x to v. */
-static void set_bit(unsigned *x, unsigned n, unsigned v)
+static void set_bit(uint16_t *x, unsigned n, unsigned v)
 {
-	*x = (*x & ~(1 << n)) | (v << n);
+	*x = (*x & ~(1U << n)) | (v << n);
 }
 

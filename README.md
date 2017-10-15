@@ -138,15 +138,8 @@ lui		# rs0 = imm << 5
 
 ```
 
-$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-$$ bad-assembly-language $$
-
-$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-#########
-= USAGE =
-#########
+#bad-assembly-language
 
 The commands are exactly those above, there is no shorthand.
 

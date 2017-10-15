@@ -1,6 +1,6 @@
 let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0
 argglobal
-edit ~/personal/cpu/bad-machine/assembler.c
+edit ~/personal/cpu/bad-machine/programs/src_assem/assembler.c
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
@@ -102,33 +102,44 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-12,42fold
-44,132fold
-137,161fold
-171,203fold
-210,266fold
-273,462fold
-468,488fold
-499,529fold
-535,539fold
-549,573fold
-582,605fold
-613,635fold
-643,658fold
-664,666fold
-672,675fold
-681,683fold
-689,694fold
-704,724fold
-730,735fold
-742,748fold
-755,761fold
-768,780fold
-787,795fold
-494,808fold
-494
+11,41fold
+43,131fold
+136,160fold
+170,202fold
+209,265fold
+308,359fold
+360,384fold
+385,388fold
+389,392fold
+272,407fold
+413,430fold
+167,431fold
+441,470fold
+476,479fold
+489,513fold
+522,545fold
+553,575fold
+583,598fold
+604,605fold
+611,613fold
+619,620fold
+626,631fold
+641,659fold
+665,674fold
+681,686fold
+693,698fold
+705,716fold
+723,731fold
+437,744fold
+167
 normal! zo
-494
+272
+normal! zo
+272
+normal! zc
+437
+normal! zo
+437
 normal! zc
 let s:l = 1 - ((0 * winheight(0) + 40) / 81)
 if s:l < 1 | let s:l = 1 | endif

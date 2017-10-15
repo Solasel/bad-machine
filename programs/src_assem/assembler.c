@@ -734,7 +734,7 @@ static int instr_to_hex(uint16_t instr, char **buf)
 /* returns the nth bit of x. */
 static unsigned get_bit(uint16_t x, unsigned n)
 {
-	return x & (1U << n);
+	return (x >> n) & 1U;
 }
 
 /* Sets the nth bit of x to v. */

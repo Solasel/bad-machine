@@ -18,6 +18,7 @@ To check the output, right click on the 'regs' box in logisim and click "View Re
 
 Currently very untested and probably very broken. Enjoy tearing your hair out!
 
+Machine Language:
 ```text
 
 $$$$$$$$$$$$$$$$$$$$$$
@@ -138,8 +139,7 @@ lui		# rs0 = imm << 5
 
 ```
 
-
-#bad-assembly-language
+Assembly Language:
 
 The commands are exactly those above, there is no shorthand.
 
@@ -152,6 +152,8 @@ S-type: 	cmd rs2, rs1, imm
 U-type:		lui rs0, imm
 
 where rs0, rs1, and rs2 are x0-x7, and imm is a decimal number.
+
+	-Note that this doesn't support the sw/lw format of immediates.
 
 Commands are separated by newlines, and parts of commands
 	are separated by commas and whiespace (including tabs).

@@ -1,6 +1,5 @@
 First, thanks to [sultanxda](https://github.com/sultanxda) for his help on the assembler.
 
-```text
 This repo contains two main objects:
 
 A logisim circuit that implements a single-cycle processor for a machine language.
@@ -13,7 +12,6 @@ To load the output of the assembler into logisim, poke the program memory on the
 
 To run, simply enable ticks. I don't know the clock threshold for the cpu.
 
-```
 To check the output, right click on the 'regs' box in logisim and click "View Registers".
 	You can check the output against [venus](https://kvakil.github.io/venus/). Make
 	sure you only use x0 - x7, and only instructions supported by this arch.
@@ -30,7 +28,7 @@ $$$$$$$$$$$$$$$$$$$$$$
 = SPEC: =
 #########
 
-16 bit regs/instructions
+16 bit regs/instructions/words
 8 regs (3 bit specifications)
 word-aligned addressing
 
@@ -89,9 +87,6 @@ FEDCBA98765|432|10
 = Instructions: =
 #################
 
-```
-```
-
 R : 00
 ======
 
@@ -144,7 +139,9 @@ lui		# rs0 = imm << 5
 ```
 
 $$$$$$$$$$$$$$$$$$$$$$$$$$$
+
 $$ bad-assembly-language $$
+
 $$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 #########
@@ -154,8 +151,11 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$
 The commands are exactly those above, there is no shorthand.
 
 R-type:		cmd rs0, rs1, rs2
+
 I-type:		cmd rs0, rs1, imm
+
 S-type: 	cmd rs2, rs1, imm
+
 U-type:		lui rs0, imm
 
 where rs0, rs1, and rs2 are x0-x7, and imm is a decimal number.

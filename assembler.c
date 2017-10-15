@@ -2,6 +2,11 @@
    Takes a file with bal commdands and turns it into
    a file with equivalent bml instructions to be
    passed into logisim and be run.
+
+   For all of you vim users, this file has a view file
+   called assembler.c.v
+
+   USE IT!
 */
 
 /* Constants. */
@@ -288,210 +293,212 @@ int line_to_inst(int i, char **linep, char **dst)
 	char *line = *linep;
 	char *token;
 
-	/* Writes OPC, S1, and S2. */
+	/* Figures out whether the command is valid. */
 	token = strtok(line, ", \t\v\f");
 	for (i = 0; i < NUM_INSTRUCTIONS; i++) {
-
-		if (!strcmp(line, instructions[i])) {
-
-			/* Once we are sure we have an instruction,
-			 * rip the arguments from it and get bools
-			 * of their validity. Finally, check
-			 * for trailing characters. */
-			arg1 = strtok(NULL, ", \t\v\f");
-			arg2 = strtok(NULL, ", \t\v\f");
-			arg3 = strtok(NULL, ", \t\v\f");
-
-			if (strtok(NULL, ", \t\v\f")) {
-				printf("Trailing characters on line %d.\n",
-						i);
-				return -2;
-			}
-			
-			switch(i) {
-
-				/* R-Types. */
-				case 0 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							0, 0);
-					break;
-
-				case 1 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							0, 1);
-					break;
-
-				case 2 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							1, 0);
-					break;
-
-				case 3 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							1, 1);
-					break;
-
-				case 4 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							2, 0);
-					break;
-
-				case 5 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							3, 0);
-					break;
-
-				case 6 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							3, 1);
-					break;
-
-				case 7 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							4, 0);
-					break;
-
-				case 8 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							4, 1);
-					break;
-
-				case 9 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							5, 0);
-					break;
-
-				case 10 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							5, 1);
-					break;
-
-				case 11 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							6, 0);
-					break;
-
-				case 12 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							6, 1);
-					break;
-
-				case 13 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							7, 0);
-					break;
-
-				case 14 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							7, 1);
-					break;
-
-				case 15 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							7, 2);
-					break;
-
-				case 16 :
-					failure = write_r_type(i, &instr,
-							arg1, arg2, arg3,
-							7, 3);
-					break;
-
-				/* I-Types. */
-				case 17 :
-					failure = write_i_type(i, &instr,
-							arg1, arg2, arg3,
-							0);
-					break;
-
-				case 18 :
-					failure = write_i_type(i, &instr,
-							arg1, arg2, arg3,
-							1);
-					break;
-
-				case 19 :
-					failure = write_i_type(i, &instr,
-							arg1, arg2, arg3,
-							2);
-					break;
-
-				case 20 :
-					failure = write_i_type(i, &instr,
-							arg1, arg2, arg3,
-							3);
-					break;
-
-				case 21 :
-					failure = write_i_type(i, &instr,
-							arg1, arg2, arg3,
-							4);
-					break;
-
-				case 22 :
-					failure = write_i_type(i, &instr,
-							arg1, arg2, arg3,
-							5);
-					break;
-
-				case 23 :
-					failure = write_i_type(i, &instr,
-							arg1, arg2, arg3,
-							6);
-					break;
-
-				case 24 :
-					failure = write_i_type(i, &instr,
-							arg1, arg2, arg3,
-							7);
-					break;
-
-				/* S-Types. */
-				case 25 :
-					failure = write_s_type(i, &instr,
-							arg1, arg2, arg3);
-					break;
-
-				/* U-Types. */
-				case 26 :
-					failure = write_u_type(i, &instr,
-							arg1, arg2);
-					break;
-
-			}
-
-			if (failure) {
-				printf("Invalid instruction: %s at line %d.\n", line, i);
-				return -2;
-			}
-
+		if (!strcmp(token, instructions[i])) {
 			break;
-
 		}
 	}
-	
-	if (i == NUM_INSTRUCTIONS) {
-		printf("Invalid instruction: %s at line %d.\n", line, i);
+
+	if (i == num_instructions) {
+		printf("invalid instruction: %s at line %d.\n", line, i);
 		return -2;
 	}
 
+	/* Once we are sure we have an instruction,
+	 * rip the arguments from it and check
+	 * for trailing characters. */
+	arg1 = strtok(NULL, ", \t\v\f");
+	arg2 = strtok(NULL, ", \t\v\f");
+	arg3 = strtok(NULL, ", \t\v\f");
+
+	if (strtok(NULL, ", \t\v\f")) {
+		printf("Trailing characters on line %d.\n",
+				i);
+		return -2;
+	}
 	
+
+	/* Now that we know we have a valid instruction,
+	 * check all the fields are correct, and formats
+	 * instr properly. */
+	switch(i) {
+
+		/* r-types. */
+		case 0 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					0, 0);
+			break;
+
+		case 1 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					0, 1);
+			break;
+
+		case 2 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					1, 0);
+			break;
+
+		case 3 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					1, 1);
+			break;
+
+		case 4 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					2, 0);
+			break;
+
+		case 5 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					3, 0);
+			break;
+
+		case 6 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					3, 1);
+			break;
+
+		case 7 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					4, 0);
+			break;
+
+		case 8 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					4, 1);
+			break;
+
+		case 9 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					5, 0);
+			break;
+
+		case 10 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					5, 1);
+			break;
+
+		case 11 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					6, 0);
+			break;
+
+		case 12 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					6, 1);
+			break;
+
+		case 13 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					7, 0);
+			break;
+
+		case 14 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					7, 1);
+			break;
+
+		case 15 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					7, 2);
+			break;
+
+		case 16 :
+			failure = write_r_type(i, &instr,
+					arg1, arg2, arg3,
+					7, 3);
+			break;
+
+		/* I-Types. */
+		case 17 :
+			failure = write_i_type(i, &instr,
+					arg1, arg2, arg3,
+					0);
+			break;
+
+		case 18 :
+			failure = write_i_type(i, &instr,
+					arg1, arg2, arg3,
+					1);
+			break;
+
+		case 19 :
+			failure = write_i_type(i, &instr,
+					arg1, arg2, arg3,
+					2);
+			break;
+
+		case 20 :
+			failure = write_i_type(i, &instr,
+					arg1, arg2, arg3,
+					3);
+			break;
+
+		case 21 :
+			failure = write_i_type(i, &instr,
+					arg1, arg2, arg3,
+					4);
+			break;
+
+		case 22 :
+			failure = write_i_type(i, &instr,
+					arg1, arg2, arg3,
+					5);
+			break;
+
+		case 23 :
+			failure = write_i_type(i, &instr,
+					arg1, arg2, arg3,
+					6);
+			break;
+
+		case 24 :
+			failure = write_i_type(i, &instr,
+					arg1, arg2, arg3,
+					7);
+			break;
+
+		/* S-Types. */
+		case 25 :
+			failure = write_s_type(i, &instr,
+					arg1, arg2, arg3);
+			break;
+
+		/* U-Types. */
+		case 26 :
+			failure = write_u_type(i, &instr,
+					arg1, arg2);
+			break;
+
+	}
+
+	if (failure) {
+		printf("Invalid instruction: %s at line %d.\n", line, i);
+		return -2;
+	}
+	
+
+	/* Finally, interprets instr and puts its
+	 * hex representation into dst. */
 	failure = inst_to_hex(instr, dst);
 	if (failure) {
 		printf("Failed to turn an instruction into hex at line %d.\n",
